@@ -1,20 +1,23 @@
 import { Body, Controller, DefaultValuePipe, Get, Param, ParseIntPipe, Patch, Post, Put, Query } from '@nestjs/common';
 import { CreateUserDto } from './dtos/create-user.dto';
 import { PatchUserDto } from './dtos/patch-user.dto';
+import { UsersService } from './providers/users.service';
 
 @Controller('users')
 export class UsersController {
+  constructor(private readonly usersService: UsersService) {}
+
   @Get()
   public getUsers(
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number
-  ): string {
-    return `getUsers page: ${page}`;
+  ) {
+    return this.usersService.getAll(page, limit);
   }
 
   @Get('/:id')
-  public getUser(@Param('id', ParseIntPipe) id: number): string {
-    return `User ${id}`;
+  public getUser(@Param('id', ParseIntPipe) id: number) {
+    return this.usersService.getById(id);
   }
 
   @Post()
