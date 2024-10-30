@@ -2,12 +2,18 @@ import { Body, Controller, DefaultValuePipe, Get, Param, ParseIntPipe, Patch, Po
 import { CreateUserDto } from './dtos/create-user.dto';
 import { PatchUserDto } from './dtos/patch-user.dto';
 import { UsersService } from './providers/users.service';
+import { ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 @Controller('users')
+@ApiTags('Users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get()
+  @ApiOperation({ summary: 'returns all users' })
+  @ApiResponse({ status: 200, description: ' users are fetched successfully' })
+  @ApiQuery({ name: 'page', type: 'number', required: false, example: 5 })
+  @ApiQuery({ name: 'limit', type: 'number', required: false, example: 10 })
   public getUsers(
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number
@@ -16,6 +22,7 @@ export class UsersController {
   }
 
   @Get('/:id')
+  @ApiParam({ name: 'id', type: 'number', required: true, example: 2 })
   public getUser(@Param('id', ParseIntPipe) id: number) {
     return this.usersService.getById(id);
   }

@@ -2,8 +2,10 @@ import { Body, Controller, DefaultValuePipe, Get, Param, ParseIntPipe, Patch, Po
 import { PostsService } from './providers/posts.service';
 import { CreatePostDto } from './dtos/create-post.dto';
 import { PatchPostDto } from './dtos/patch-post.dto';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 @Controller('posts')
+@ApiTags('Posts')
 export class PostsController {
   constructor(private readonly postsService: PostsService) {}
 
@@ -25,6 +27,8 @@ export class PostsController {
     return this.postsService.getAllByAuthorId(id);
   }
 
+  @ApiOperation({ summary: 'creates a new post' })
+  @ApiResponse({ status: 200, description: 'post is created successfully' })
   @Post()
   public createPost(@Body() post: CreatePostDto): CreatePostDto {
     return post;
@@ -35,6 +39,8 @@ export class PostsController {
     return 'updatePost';
   }
 
+  @ApiOperation({ summary: 'updates a post' })
+  @ApiResponse({ status: 200, description: 'post is updated successfully' })
   @Patch()
   public patchPost(@Body() post: PatchPostDto): PatchPostDto {
     return post;
