@@ -16,6 +16,7 @@ export class CreateUserDto {
   @IsString()
   @IsNotEmpty()
   @MinLength(6)
+  @MaxLength(30)
   @Matches(/^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{6,}$/, {
     message: 'Minimum six characters, at least one letter, one number and one special character',
   })
@@ -24,5 +25,6 @@ export class CreateUserDto {
   @IsEmail()
   @IsNotEmpty()
   @MinLength(6)
+  @MaxLength(30)
   email: string;
 }
