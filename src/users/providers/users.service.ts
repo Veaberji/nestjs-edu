@@ -1,49 +1,136 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { AuthService } from 'src/auth/providers/auth.service';
-import { Repository } from 'typeorm';
+import { CreateUserDto } from './../dtos/create-user.dto';
+import { DataSource, Repository } from 'typeorm';
+import { GetUsersParamDto } from '../dtos/get-users-param.dto';
+import {
+  BadRequestException,
+  HttpException,
+  HttpStatus,
+  Inject,
+  Injectable,
+  RequestTimeoutException,
+  forwardRef,
+} from '@nestjs/common';
 import { User } from '../user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { CreateUserDto } from '../dtos/create-user.dto';
+import { ConfigService, ConfigType } from '@nestjs/config';
+import profileConfig from '../config/profile.config';
+import { UsersCreateManyProvider } from './users-create-many.provider';
+import { CreateManyUsersDto } from '../dtos/create-many-users.dto';
+import { CreateUserProvider } from './create-user.provider';
+import { FindOneUserByEmailProvider } from './find-one-user-by-email.provider';
+import { FindOneByGoogleIdProvider } from './find-one-by-google-id.provider';
+import { CreateGoogleUserProvider } from './create-google-user.provider';
+import { GoogleUser } from '../interfaces/google-user.inerface';
 
 /**
- * UsersService class
+ * Controller class for '/users' API endpoint
  */
 @Injectable()
 export class UsersService {
-  /**
-   * creates UsersService instance
-   */
   constructor(
-    @Inject(forwardRef(() => AuthService)) private auth: AuthService,
-    @InjectRepository(User) private userRepository: Repository<User>
+    /**
+     * Injecting usersRepository
+     */
+    @InjectRepository(User)
+    private usersRepository: Repository<User>,
+
+    /**
+     * Inject UsersCreateMany provider
+     */
+    private readonly usersCreateManyProvider: UsersCreateManyProvider,
+    /**
+     * Inject Create Users Provider
+     */
+    private readonly createUserProvider: CreateUserProvider,
+
+    /**
+     * Inject findOneUserByEmailProvider
+     */
+    private readonly findOneUserByEmailProvider: FindOneUserByEmailProvider,
+
+    /**
+     * Inject findOneByGoogleIdProvider
+     */
+    private readonly findOneByGoogleIdProvider: FindOneByGoogleIdProvider,
+    /**
+     * Inject createGooogleUserProvider
+     */
+    private readonly createGooogleUserProvider: CreateGoogleUserProvider,
   ) {}
 
   /**
-   * returns all users
+   * Method to create a new user
    */
-  public getAll(page: number, limit: number) {
-    if (!this.auth.isAuthenticated()) {
-      throw new Error('is not Authenticated');
+  public async createUser(createUserDto: CreateUserDto) {
+    return await this.createUserProvider.createUser(createUserDto);
+  }
+
+  /**
+   * Public method responsible for handling GET request for '/users' endpoint
+   */
+  public findAll(
+    getUserParamDto: GetUsersParamDto,
+    limt: number,
+    page: number,
+  ) {
+    throw new HttpException(
+      {
+        status: HttpStatus.MOVED_PERMANENTLY,
+        error: 'The API endpoint does not exist',
+        fileName: 'users.service.ts',
+        lineNumber: 88,
+      },
+      HttpStatus.MOVED_PERMANENTLY,
+      {
+        cause: new Error(),
+        description: 'Occured because the API endpoint was permanently moved',
+      },
+    );
+  }
+
+  /**
+   * Public method used to find one user using the ID of the user
+   */
+  public async findOneById(id: number) {
+    let user = undefined;
+
+    try {
+      user = await this.usersRepository.findOneBy({
+        id,
+      });
+    } catch (error) {
+      throw new RequestTimeoutException(
+        'Unable to process your request at the moment please try later',
+        {
+          description: 'Error connecting to the the datbase',
+        },
+      );
     }
 
-    return [
-      { firstName: 'John', lastName: 'Doe' },
-      { firstName: 'Alice', lastName: 'M' },
-    ];
+    /**
+     * Handle the user does not exist
+     */
+    if (!user) {
+      throw new BadRequestException('The user id does not exist');
+    }
+
+    return user;
   }
 
-  /**
-   * returns user by Id
-   */
-  public getById(id: number) {
-    return { id, firstName: 'John', lastName: 'Doe' };
+  public async createMany(createManyUsersDto: CreateManyUsersDto) {
+    return await this.usersCreateManyProvider.createMany(createManyUsersDto);
   }
 
-  /**
-   * creates a new user
-   */
-  public async create(user: CreateUserDto): Promise<User> {
-    const newUser = this.userRepository.create(user);
-    return await this.userRepository.save(newUser);
+  // Finds one user by email
+  public async findOneByEmail(email: string) {
+    return await this.findOneUserByEmailProvider.findOneByEmail(email);
+  }
+
+  public async findOneByGoogleId(googleId: string) {
+    return await this.findOneByGoogleIdProvider.findOneByGoogleId(googleId);
+  }
+
+  public async createGoogleUser(googleUser: GoogleUser) {
+    return await this.createGooogleUserProvider.createGoogleUser(googleUser);
   }
 }

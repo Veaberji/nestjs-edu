@@ -1,30 +1,38 @@
-import { IsEmail, IsNotEmpty, IsOptional, IsString, Matches, MaxLength, MinLength } from 'class-validator';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  Matches,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
 
 export class CreateUserDto {
   @IsString()
   @IsNotEmpty()
   @MinLength(3)
-  @MaxLength(30)
+  @MaxLength(96)
   firstName: string;
 
   @IsString()
   @IsOptional()
   @MinLength(3)
-  @MaxLength(30)
+  @MaxLength(96)
   lastName?: string;
-
-  @IsString()
-  @IsNotEmpty()
-  @MinLength(6)
-  @MaxLength(30)
-  @Matches(/^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{6,}$/, {
-    message: 'Minimum six characters, at least one letter, one number and one special character',
-  })
-  password: string;
 
   @IsEmail()
   @IsNotEmpty()
-  @MinLength(6)
-  @MaxLength(30)
+  @MaxLength(96)
   email: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MinLength(8)
+  @MaxLength(96)
+  @Matches(/^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/, {
+    message:
+      'Minimum eight characters, at least one letter, one number and one special character',
+  })
+  password: string;
 }

@@ -1,36 +1,50 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 
-@Entity({ name: 'users' })
+import { Exclude } from 'class-transformer';
+import { Post } from 'src/posts/post.entity';
+
+@Entity()
 export class User {
   @PrimaryGeneratedColumn()
   id: number;
 
   @Column({
     type: 'varchar',
-    length: '30',
+    length: 96,
     nullable: false,
   })
   firstName: string;
 
   @Column({
     type: 'varchar',
-    length: '30',
+    length: 96,
     nullable: true,
   })
   lastName: string;
 
   @Column({
     type: 'varchar',
-    length: '30',
+    length: 96,
     nullable: false,
+    unique: true,
   })
-  password: string;
+  email: string;
 
   @Column({
     type: 'varchar',
-    length: '30',
-    unique: true,
-    nullable: false,
+    length: 96,
+    nullable: true,
   })
-  email: string;
+  @Exclude()
+  password?: string;
+
+  @Column({
+    type: 'varchar',
+    nullable: true,
+  })
+  @Exclude()
+  googleId?: string;
+
+  @OneToMany(() => Post, (post) => post.author)
+  posts?: Post[];
 }

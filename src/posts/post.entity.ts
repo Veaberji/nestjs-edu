@@ -1,31 +1,43 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
-import { PostType } from './enums/post-type.enum';
-import { PostStatus } from './enums/post-status.enum';
-import { CreatePostMetaOptionsDto } from './dtos/create-post-meta-options.dto';
+import {
+  Column,
+  Entity,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  OneToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
-@Entity({ name: 'posts' })
+import { CreatePostMetaOptionsDto } from '../meta-options/dtos/create-post-meta-options.dto';
+import { MetaOption } from 'src/meta-options/meta-option.entity';
+import { Tag } from 'src/tags/tag.entity';
+import { User } from 'src/users/user.entity';
+import { postStatus } from './enums/postStatus.enum';
+import { postType } from './enums/postType.enum';
+
+@Entity()
 export class Post {
   @PrimaryGeneratedColumn()
   id: number;
 
   @Column({
     type: 'varchar',
-    length: '50',
+    length: 512,
     nullable: false,
   })
   title: string;
 
   @Column({
     type: 'enum',
-    enum: PostType,
+    enum: postType,
     nullable: false,
-    default: PostType.Post,
+    default: postType.POST,
   })
-  type: PostType;
+  postType: postType;
 
   @Column({
     type: 'varchar',
-    length: '10',
+    length: 256,
     nullable: false,
     unique: true,
   })
@@ -33,39 +45,51 @@ export class Post {
 
   @Column({
     type: 'enum',
-    enum: PostStatus,
+    enum: postStatus,
     nullable: false,
+    default: postStatus.DRAFT,
   })
-  status: PostStatus;
+  status: postStatus;
+
+  @Column({
+    type: 'text',
+    nullable: true,
+  })
+  content?: string;
+
+  @Column({
+    type: 'text',
+    nullable: true,
+  })
+  schema?: string;
 
   @Column({
     type: 'varchar',
-    length: '500',
-    nullable: false,
-  })
-  content: string;
-
-  @Column({
-    type: 'varchar',
-    length: '500',
+    length: 1024,
     nullable: true,
   })
-  schema: string;
+  featuredImageUrl?: string;
 
   @Column({
-    type: 'varchar',
-    length: '200',
+    type: 'timestamp', // 'datetime' in mysql
     nullable: true,
   })
-  imageUrl: string;
+  publishOn?: Date;
 
-  @Column({
-    type: 'timestamp',
-    nullable: true,
+  @OneToOne(() => MetaOption, (metaOptions) => metaOptions.post, {
+    cascade: true,
+    eager: true,
   })
-  publishedDate: Date;
+  metaOptions?: MetaOption;
 
-  authorId: number;
-  tags: string[];
-  metaOptions: CreatePostMetaOptionsDto[];
+  @ManyToOne(() => User, (user) => user.posts, {
+    eager: true,
+  })
+  author: User;
+
+  @ManyToMany(() => Tag, (tag) => tag.posts, {
+    eager: true,
+  })
+  @JoinTable()
+  tags?: Tag[];
 }

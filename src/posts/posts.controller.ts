@@ -1,48 +1,73 @@
-import { Body, Controller, DefaultValuePipe, Get, Param, ParseIntPipe, Patch, Post, Put, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { PostsService } from './providers/posts.service';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CreatePostDto } from './dtos/create-post.dto';
 import { PatchPostDto } from './dtos/patch-post.dto';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { GetPostsDto } from './dtos/get-post.dto';
+import { ActiveUser } from 'src/auth/decorators/active-user.decorator';
+import { ActiveUserData } from 'src/auth/interfaces/active-user-data.interface';
 
 @Controller('posts')
 @ApiTags('Posts')
 export class PostsController {
-  constructor(private readonly postsService: PostsService) {}
+  constructor(
+    /*
+     *  Injecting Posts Service
+     */
+    private readonly postsService: PostsService,
+  ) {}
 
-  @Get()
+  /*
+   * GET localhost:3000/posts/:userId
+   */
+  @Get('/:userId?')
   public getPosts(
-    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
-    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number
+    @Param('userId') userId: string,
+    @Query() postQuery: GetPostsDto,
   ) {
-    return this.postsService.getAll(page, limit);
+    return this.postsService.findAll(postQuery, userId);
   }
 
-  @Get('/:id')
-  public getPost(@Param('id', ParseIntPipe) id: number) {
-    return this.postsService.getById(id);
-  }
-
-  @Get('byAuthor/:id')
-  public getPostsByAuthorId(@Param('id', ParseIntPipe) id: number) {
-    return this.postsService.getAllByAuthorId(id);
-  }
-
-  @ApiOperation({ summary: 'creates a new post' })
-  @ApiResponse({ status: 200, description: 'post is created successfully' })
+  @ApiOperation({
+    summary: 'Creates a new blog post',
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'You get a 201 response if your post is created successfully',
+  })
   @Post()
-  public createPost(@Body() post: CreatePostDto): CreatePostDto {
-    return post;
+  public createPost(
+    @Body() createPostDto: CreatePostDto,
+    @ActiveUser() user: ActiveUserData,
+  ) {
+    console.log(user);
+    return this.postsService.create(createPostDto, user);
   }
 
-  @Put()
-  public updatePost(): string {
-    return 'updatePost';
-  }
-
-  @ApiOperation({ summary: 'updates a post' })
-  @ApiResponse({ status: 200, description: 'post is updated successfully' })
+  @ApiOperation({
+    summary: 'Updates an existing blog post',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'A 200 response if the post is updated successfully',
+  })
   @Patch()
-  public patchPost(@Body() post: PatchPostDto): PatchPostDto {
-    return post;
+  public updatePost(@Body() patchPostDto: PatchPostDto) {
+    return this.postsService.update(patchPostDto);
+  }
+
+  @Delete()
+  public deletePost(@Query('id', ParseIntPipe) id: number) {
+    return this.postsService.delete(id);
   }
 }
